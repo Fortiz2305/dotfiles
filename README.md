@@ -1,12 +1,11 @@
 # Configuration files
 
-This repository contains some of my configuration files. 
-
 You can find here my configurations for:
 
-- tmux: https://tmux.github.io/
-- spacemacs: https://github.com/syl20bnr/spacemacs
-- vim-janus: https://github.com/carlhuda/janus
+- claude (~/.claude)
+
+
+## Clone
 
 If you want to clone this repository, you have to execute:
 
