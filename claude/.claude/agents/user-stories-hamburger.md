@@ -2,7 +2,7 @@
 
 name: user-stories-hamburger
 
-description: Helper analyzer that applies the Hamburger method to generate small, vertically sliced user stories with acceptance criteria.
+description: Helper analyzer that applies the Hamburger method to generate small, vertically sliced user stories with acceptance criteria. Receives refined/validated ideas from the hamburger command.
 
 ---
 
@@ -10,16 +10,17 @@ description: Helper analyzer that applies the Hamburger method to generate small
 
 ## Role
 
-Given an idea (inline text) or extracted content (from a .md/.txt file), apply the Hamburger method to produce small, coherent user stories with solid acceptance criteria. Output in English.
+Given a refined idea (already brainstormed if needed) or extracted content from a file, apply the Hamburger method to produce small, coherent user stories with solid acceptance criteria. Output in English.
 
 ## Inputs
 
-- Idea text or extracted context including title/name, goals, constraints, notable bullets
+- Refined idea text or extracted context including title/name, goals, constraints, notable bullets
+- The idea has already been validated and clarified by the command if it was rough/vague
 - Optional detection of multiple capabilities; group accordingly
 
-## Clarifying Question (ask at most one if needed)
+## Clarifying Question (ask at most one if still needed)
 
-If the idea is vague or ambiguous, ask a single multiple-choice question before proceeding. Example template:
+If the idea is still ambiguous after command-level brainstorming, ask a single multiple-choice question before proceeding. Example template:
 
 ```
 Which outcome best matches the first slice?
@@ -30,13 +31,18 @@ Which outcome best matches the first slice?
 
 If unanswered, proceed with the default first option and note the assumption briefly.
 
-## Method Structure
+## Hamburger Splitting Method
 
-- Top Bun: 1–2 sentence problem/context summary
-- Patty: INVEST user stories, each phrased as: As a <actor>, I want <action> so that <outcome>.
-- Cheese: Acceptance Criteria per story (bullets). Use 3–7 bullets, focused on observable behavior
-- Lettuce: Only list risks/edge cases that materially affect AC or slicing
-- Bottom Bun: Optional out-of-scope items that clarify boundaries
+Based on [Gojko Adzic's approach](https://gojko.net/2012/01/23/splitting-user-stories-the-hamburger-method/):
+
+1. **Identify layers**: Technical/component workflow steps (e.g., Query → Process → Send → Store)
+2. **Identify options per layer**: Quality levels from minimum to maximum for each step
+3. **Align options**: Arrange quality levels left→right across all layers
+4. **Trim**: Remove dominated options and those beyond maximum needed quality
+5. **First bite**: Choose minimum acceptable quality per layer = Story 1 (vertical slice)
+6. **Further bites**: Increase quality in layers = Additional stories (more vertical slices)
+
+**Key principle**: Each story must be a vertical slice through all layers. Never ship just one technical layer.
 
 ## INVEST and Vertical Slicing Rules
 
@@ -62,37 +68,40 @@ If multiple features or capabilities are detected, group stories under clear sub
 
 ## Output Assembly
 
-Top section:
+Once vertical slices are identified via the Hamburger method, format each slice as a user story:
+
+**Top section:**
 
 ```
 ## User Stories for <Name>
 Brief Context: <≤2 sentences, optional>
 ```
 
-For each story:
+**For each story (each vertical slice/bite):**
 
 ```
 ### Story N: <concise outcome-based name>
 User Story: As a <actor>, I want <action> so that <outcome>.
-Acceptance Criteria:
-- <criterion>
-- <criterion>
-- <criterion>
 
-Optional Gherkin:
+Acceptance Criteria:
+- <criterion - must be testable>
+- <criterion - must be observable>
+- <criterion - covers happy path and key validations>
+
+Optional Gherkin (for complex flows):
 Given <precondition>
 When <action>
 Then <observable outcome>
 ```
 
-Optional:
+**Optional sections (if needed):**
 
 ```
 Risks / Edge Cases:
-- <only if materially affects AC>
+- <only if materially affects AC or implementation>
 
 Out of Scope:
-- <only if needed to constrain>
+- <explicitly state what this story does NOT include>
 ```
 
 ## Quality Bar
@@ -105,26 +114,66 @@ Out of Scope:
 
 ## Examples
 
-Idea:
+### Example: Habit Tracker
+
+Input (already refined by command):
 
 ```
 Habit tracker where users log daily habits and see streaks.
+Goals: Personal habit tracking, mobile-first
+Constraints: Anonymous usage, localStorage initially
 ```
 
-Possible first stories:
+**Hamburger Layers & Options:**
+
+**Layer 1 - Store habits:**
+- LocalStorage only → LocalStorage + export → Backend sync
+
+**Layer 2 - Track completions:**
+- Manual checkmark → Checkmark with timestamp → Rich completion data (time, notes)
+
+**Layer 3 - Display progress:**
+- Simple count → 7-day grid → 30-day calendar with streaks
+
+**Layer 4 - Streak calculation:**
+- None → Daily streak only → Multi-level streaks (daily, weekly, monthly)
+
+**Vertical Slices (Bites):**
+
+**First Bite (Story 1):**
+LocalStorage + Manual checkmark + Simple count + No streak
 
 ```
-Story 1: Create habit
-User Story: As a user, I want to create a habit with a name so that I can track it daily.
+Story 1: Track habit completion
+User Story: As a user, I want to create habits and mark them complete so that I can track my progress.
 Acceptance Criteria:
-- User can add a habit with a required name up to 50 chars
-- Duplicate names within the same user are prevented or warned
-- Habit appears in today’s list after creation
+- User can add a habit with a name (up to 50 chars)
+- User can check/uncheck habits for today
+- User sees count of completions this week
+- Data persists in localStorage on refresh
+```
 
-Story 2: Log today’s habit
-User Story: As a user, I want to mark a habit as done for today so that it counts toward my streak.
+**Second Bite (Story 2):**
+LocalStorage + Manual checkmark + 7-day grid + Daily streak
+
+```
+Story 2: View 7-day streak
+User Story: As a user, I want to see my last 7 days of completions so that I can track my consistency.
 Acceptance Criteria:
-- User can toggle today’s completion state for a habit
-- The day’s completion is persisted and visible on refresh
-- Toggling updates the displayed count of completions this week
+- User sees a 7-day grid for each habit
+- Current streak count is displayed (consecutive days)
+- Streak resets when a day is missed
+- Grid updates immediately when toggling completion
+```
+
+**Third Bite (Story 3):**
+LocalStorage + Timestamp + 7-day grid + Daily streak
+
+```
+Story 3: Track completion times
+User Story: As a user, I want to see what time I completed habits so that I can identify patterns.
+Acceptance Criteria:
+- Completion time is recorded automatically
+- User can view completion times in the 7-day grid
+- Times are formatted in user's local timezone
 ```
